@@ -3,6 +3,8 @@ package shell;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.regex.Pattern;
+
 import shell.CommandHandler;
 
 /**
@@ -27,37 +29,33 @@ public class Jsh {
 		while(true) {
 			System.out.print("jsh> ");
 			try {
-				String input = shellBuffer.readLine().trim();
-				if(checkForEOF(input)) {
+				// TODO: This section is untested, as Eclipse still can't read Ctrl-D
+				// TODO: from its terminal. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=159803.
+				String nextline = shellBuffer.readLine();
+				if(nextline == null) {
+					// Exit program if Ctrl-D (^D), an EOF, is detected.
+					// Not sure if this will cause it to return -1.
 					System.exit(0);
 				}
 				else {
-					System.out.println("\n" + commandshell.execute(input));
+					// A BufferedReader strips out line feeds and carriage returns.
+					// A line of input that is only line feeds and/or carriage returns
+					// will have length 0.
+					if (nextline.length() == 0) {
+						continue;
+					}
+					else {
+						System.out.println(commandshell.execute(nextline.trim()));
+					}
 				}
 			}
 			catch (IOException ioe) {
 				System.out.println("IOException: \n" + ioe.getMessage());
 			}
-			// TODO: How to print stderror instead of this?
+			// TODO: Later, this will print stderror messages from CommandHandler
 			catch (Exception ex) {
 				System.out.println("Error: " + ex.getMessage());
 			}
 		}
 	}
-	
-	/**
-	 * Checks whether input contains an EOF (^D in Linux), which is the signal
-	 * to quit this shell.
-	 * 
-	 * @param input Terminal input.
-	 * @return True if input contains a carriage return, false if not. 
-	 */
-	private static boolean checkForEOF(String input) {
-		String eof_windows = "\r\n";
-		String eof_linux = "\n";
-		// TODO: method unimplemented.
-		return input.matches("^" + eof_linux + "{1}+|^" 
-				+ eof_windows + "{1}+");
-	}
-
 }
