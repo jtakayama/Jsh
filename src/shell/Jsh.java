@@ -3,8 +3,6 @@ package shell;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.regex.Pattern;
-
 import shell.CommandHandler;
 
 /**
@@ -25,16 +23,16 @@ public class Jsh {
 		// BufferedReader for the shell.
 		BufferedReader shellBuffer = new BufferedReader(shellInput);
 		// CommandHandler to parse and execute the input commands.
-		CommandHandler commandshell = new CommandHandler();
+		CommandHandler handler = null;
 		while(true) {
 			System.out.print("jsh> ");
 			try {
-				// TODO: This section is untested, as Eclipse still can't read Ctrl-D
-				// TODO: from its terminal. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=159803.
+				// Note: As of Eclipse Juno / January 2013, Ctrl-D is
+				// not registered by the Eclipse console in Windows.
+				// See https://bugs.eclipse.org/bugs/show_bug.cgi?id=159803.
 				String nextline = shellBuffer.readLine();
 				if(nextline == null) {
-					// Exit program if Ctrl-D (^D), an EOF, is detected.
-					// Not sure if this will cause it to return -1.
+					// If no input is read, assume a ^D / EOF was entered.
 					System.exit(0);
 				}
 				else {
@@ -45,14 +43,15 @@ public class Jsh {
 						continue;
 					}
 					else {
-						System.out.println(commandshell.execute(nextline.trim()));
+						handler = new CommandHandler(nextline);
+						handler.runProcess();
+						continue;
 					}
 				}
 			}
 			catch (IOException ioe) {
 				System.out.println("IOException: \n" + ioe.getMessage());
 			}
-			// TODO: Later, this will print stderror messages from CommandHandler
 			catch (Exception ex) {
 				System.out.println("Error: " + ex.getMessage());
 			}
