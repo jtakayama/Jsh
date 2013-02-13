@@ -1,8 +1,11 @@
 package shell;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.regex.Pattern;
+
 import shell.CommandHandler;
 
 /**
@@ -12,6 +15,16 @@ import shell.CommandHandler;
  * @since Java 1.6
  */
 public class Jsh {
+	/**
+	 * workingDir: The current working directory.
+	 */
+	private static String workingDir;
+	
+	/**
+	 * LAUNCH_DIR: The directory that Jsh launches in.
+	 */
+	private static final String LAUNCH_DIR = System.getProperty("user.dir");
+	
 	/**
 	 * The main class for the shell.
 	 * 
@@ -24,6 +37,9 @@ public class Jsh {
 		BufferedReader shellBuffer = new BufferedReader(shellInput);
 		// CommandHandler to parse and execute the input commands.
 		CommandHandler handler = null;
+		// Set the current working directory.
+		workingDir = System.getProperty("user.dir");
+		
 		while(true) {
 			System.out.print("jsh> ");
 			try {
@@ -43,8 +59,45 @@ public class Jsh {
 						continue;
 					}
 					else {
-						handler = new CommandHandler(nextline);
-						handler.runProcess();
+						if (Pattern.matches("(^cd){1}.*", nextline)) {
+							// Change working directory to launch directory
+							if (nextline.equals("cd")) {
+								workingDir = LAUNCH_DIR;
+							}
+							// Change working directory to the specified directory
+							else {
+								String[] tokens = nextline.split("[ \t\n]+");
+								if (tokens.length > 2) {
+									System.err.print("Syntax error\n");
+								}
+								else if (tokens.length == 2) {
+									File path = new File(tokens[1]);
+									String absolutePath = path.getCanonicalPath();
+									File abspath = new File(absolutePath);
+									if (abspath.exists()) {
+										if (abspath.isDirectory()) {
+											workingDir = abspath.getCanonicalPath();
+										}
+										else {
+											System.err.print(tokens[1] + ": Not a directory.\n");
+										}
+									}
+									else {
+										// TODO: Current bug: I can cd /etc/network, but not cd network from /etc.
+										System.err.print(tokens[1] + ": No such directory.\n");
+									}
+								}
+							}
+						}
+						// Print working directory.
+						else if (nextline.equals("pwd")) {
+							System.out.print(workingDir + "\n");
+						}
+						// Execute the command from the current working directory.
+						else {
+							handler = new CommandHandler(nextline, workingDir);
+							handler.runProcess();
+						}
 						continue;
 					}
 				}

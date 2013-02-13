@@ -1,5 +1,6 @@
 package shell;
 import java.lang.Exception;
+import java.io.File;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -20,17 +21,23 @@ import java.util.regex.Pattern;
  */
 public class CommandHandler {
 	/**
-	 *  @param command The command passed as input, and its flags.
+	 * command: The command passed as input, and its flags.
 	 */
 	private String command;
 	
+	/**
+	 * workingDir: The working directory of the command.
+	 */
+	private String workingDir;
+		
 	/**
 	 * Constructs a new CommandHandler.
 	 * 
 	 * @param userInput	The command passed as input, and its flags.
 	 */
-	public CommandHandler(String userInput) {
+	public CommandHandler(String userInput, String wdir) {
 		this.command = userInput;
+		this.workingDir = wdir;
 	}
 	
 	/**
@@ -45,17 +52,23 @@ public class CommandHandler {
 		
 		pb = new ProcessBuilder(tokens);
 		
+		// Set working directory if not null
+		if (this.workingDir != null) {
+			File dirSetter = new File(workingDir);
+			pb.directory(dirSetter);
+		}
 		try {
 			p = pb.start();
 		}
 		catch (IOException e) {
 			if (Pattern.matches("(^Cannot run program){1}.+", e.getMessage())) {
-				System.err.println("Unknown command: \'" + tokens[0] + "\'\n");
+				System.err.print("Unknown command: \'" + tokens[0] + "\'\n");
+				return;
 			}
 			else {
-				System.err.println(e.getMessage());
+				System.err.print(e.getMessage() + "\n");
+				return;
 			}
-			return;
 		}
 		catch (Exception ex) {
 			System.err.println(ex.getMessage());
