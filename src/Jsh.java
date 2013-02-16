@@ -60,39 +60,41 @@ public class Jsh {
 							// Change working directory to launch directory
 							if (nextline.equals("cd")) {
 								workingDir = LAUNCH_DIR;
+								continue;
 							}
 							// Change working directory to the specified directory
 							else {
 								String[] tokens = nextline.split("[ \t\n]+");
 								if (tokens.length > 2) {
-									System.err.print("\nSyntax error");
+									System.out.println("Syntax error");
+									continue;
 								}
 								else if (tokens.length == 2) {
 									File path;
 									if (!Pattern.matches("[^\\/]{1}.*", tokens[1])) {
-										System.out.print("\ndirectory is within current one: " + tokens[1]);
+										System.out.println("directory is within current one: " + tokens[1]);
 										path = new File(workingDir + "/" + tokens[1]);
 									}
 									else {
 										System.out.println("directory is outside folder: " + tokens[1]);
 										path = new File(tokens[1]);
 									}
-									String absolutePath = path.getCanonicalPath();
+									File canonicalPath = new File(path.getCanonicalPath());
+									File absolutePath = new File(canonicalPath.getAbsolutePath());
 									System.out.println(absolutePath);
-									File abspath = new File(absolutePath);
-									if (abspath.exists()) {
-										if (abspath.isDirectory()) {
-											workingDir = absolutePath;
+									if (absolutePath.exists()) {
+										if (absolutePath.isDirectory()) {
+											workingDir = absolutePath.getCanonicalPath();
 											continue;
 										}
 										else {
-											System.err.print("\n" + tokens[1] + ": Not a directory.\n");
+											System.out.println(tokens[1] + ": Not a directory.");
 											continue;
 										}
 									}
 									else {
 										// TODO: Current bug: I can cd /etc/network, but not cd network from /etc.
-										System.err.print("\n" + tokens[1] + ": No such directory.\n");
+										System.out.println(tokens[1] + ": No such directory.");
 										continue;
 									}
 								}
@@ -100,7 +102,7 @@ public class Jsh {
 						}
 						// Print working directory.
 						else if (nextline.equals("pwd")) {
-							System.out.println(workingDir);
+							System.out.print("\n" + workingDir);
 							continue;
 						}
 						// Execute the command from the current working directory.
