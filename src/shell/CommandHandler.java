@@ -62,11 +62,11 @@ public class CommandHandler {
 		}
 		catch (IOException e) {
 			if (Pattern.matches("(^Cannot run program){1}.+", e.getMessage())) {
-				System.err.print("Unknown command: \'" + tokens[0] + "\'\n");
+				System.out.println("Unknown command: \'" + tokens[0] + "\'");
 				return;
 			}
 			else {
-				System.err.print(e.getMessage() + "\n");
+				System.err.println(e.getMessage() + "\n");
 				return;
 			}
 		}
