@@ -65,6 +65,8 @@ public class Jsh {
 							}
 							// Change working directory to the specified directory
 							else {
+								// tokens[0] has "cd" in "cd somewhere."
+								// Directory information is in tokens[1].
 								String[] tokens = nextline.split("[ \t\n]+");
 								if (tokens.length > 2) {
 									System.out.println("Syntax error");
@@ -72,11 +74,10 @@ public class Jsh {
 								}
 								else if (tokens.length == 2) {
 									File path;
-									// If the file is not a ../ or / switch
-									if (!Pattern.matches("^[/(../)]++.*", tokens[1])) {
+									// If the file is not a ../, .., or / switch
+									if (!Pattern.matches("^[/(..)(../)]++.*", tokens[1])) {
 										path = new File(workingDir, tokens[1]);
 										File canonicalPath = new File(path.getCanonicalPath());
-										System.out.println(canonicalPath);
 										if (canonicalPath.isDirectory()) {
 												workingDir = canonicalPath.getPath();
 												continue;
@@ -86,11 +87,15 @@ public class Jsh {
 											continue;
 										}
 									}
-									// Directory changes relative to the current directory
-									else if (Pattern.matches("(../)++.*", tokens[1])) {
+									// Directory changes containing one or more ../
+									else if ((Pattern.matches(".*(../)++.*", tokens[1])) || 
+												(tokens[1].equals(".."))) {
+										if (tokens[1].equals("..")) {
+											// A workaround that changes the .. into its equivalent.
+											tokens[1] = "../";
+										}
 										path = new File(workingDir, tokens[1]);
 										File canonicalPath = new File(path.getCanonicalPath());
-										System.out.println(canonicalPath);
 										if (canonicalPath.isDirectory()) {
 												workingDir = canonicalPath.getPath();
 												continue;
@@ -100,10 +105,10 @@ public class Jsh {
 											continue;
 										}
 									}
+									// Other directory changes
 									else {
 										path = new File(tokens[1]);
 										File canonicalPath = new File(path.getCanonicalPath());
-										System.out.println(canonicalPath.getCanonicalPath());
 										if (canonicalPath.isDirectory()) {
 												workingDir = canonicalPath.getCanonicalPath();
 												continue;
