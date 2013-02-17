@@ -45,7 +45,7 @@ public class Jsh {
 				// See https://bugs.eclipse.org/bugs/show_bug.cgi?id=159803.
 				String nextline = shellBuffer.readLine();
 				if(nextline == null) {
-					// If no input is read, assume a ^D / EOF was entered.
+					// If no input is read, assume a ^D or EOF was entered.
 					System.exit(0);
 				}
 				else {
@@ -56,6 +56,7 @@ public class Jsh {
 						continue;
 					}
 					else {
+						// Begin implementation of cd command
 						if (Pattern.matches("(^cd){1}.*", nextline)) {
 							// Change working directory to launch directory
 							if (nextline.equals("cd")) {
@@ -71,38 +72,55 @@ public class Jsh {
 								}
 								else if (tokens.length == 2) {
 									File path;
-									if (!Pattern.matches("[^\\/]{1}.*", tokens[1])) {
-										System.out.println("directory is within current one: " + tokens[1]);
-										path = new File(workingDir + "/" + tokens[1]);
-									}
-									else {
-										System.out.println("directory is outside folder: " + tokens[1]);
-										path = new File(tokens[1]);
-									}
-									File canonicalPath = new File(path.getCanonicalPath());
-									File absolutePath = new File(canonicalPath.getAbsolutePath());
-									System.out.println(absolutePath);
-									if (absolutePath.exists()) {
-										if (absolutePath.isDirectory()) {
-											workingDir = absolutePath.getCanonicalPath();
-											continue;
+									// If the file is not a ../ or / switch
+									if (!Pattern.matches("^[/(../)]++.*", tokens[1])) {
+										path = new File(workingDir, tokens[1]);
+										File canonicalPath = new File(path.getCanonicalPath());
+										System.out.println(canonicalPath);
+										if (canonicalPath.isDirectory()) {
+												workingDir = canonicalPath.getPath();
+												continue;
 										}
 										else {
-											System.out.println(tokens[1] + ": Not a directory.");
+											System.out.println("Invalid directory " + tokens[1]);
+											continue;
+										}
+									}
+									// Directory changes relative to the current directory
+									else if (Pattern.matches("(../)++.*", tokens[1])) {
+										path = new File(workingDir, tokens[1]);
+										File canonicalPath = new File(path.getCanonicalPath());
+										System.out.println(canonicalPath);
+										if (canonicalPath.isDirectory()) {
+												workingDir = canonicalPath.getPath();
+												continue;
+										}
+										else {
+											System.out.println("Invalid directory " + tokens[1]);
 											continue;
 										}
 									}
 									else {
-										// TODO: Current bug: I can cd /etc/network, but not cd network from /etc.
-										System.out.println(tokens[1] + ": No such directory.");
-										continue;
+										path = new File(tokens[1]);
+										File canonicalPath = new File(path.getCanonicalPath());
+										System.out.println(canonicalPath.getCanonicalPath());
+										if (canonicalPath.isDirectory()) {
+												workingDir = canonicalPath.getCanonicalPath();
+												continue;
+										}
+										else {
+											System.out.println("Invalid directory " + tokens[1]);
+											continue;
+										}
 									}
 								}
 							}
 						}
+						// End implementation of cd command.
+						
 						// Print working directory.
 						else if (nextline.equals("pwd")) {
-							System.out.print("\n" + workingDir);
+							System.out.println(workingDir);
 							continue;
 						}
 						// Execute the command from the current working directory.
