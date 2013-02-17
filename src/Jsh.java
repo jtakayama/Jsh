@@ -87,9 +87,21 @@ public class Jsh {
 											continue;
 										}
 									}
+									// Directory changes starting from root
+									else if ((tokens[1].charAt(0) == '/') || (tokens[1].charAt(0) == '\\')) {
+										path = new File(tokens[1]);
+										File canonicalPath = new File(path.getCanonicalPath());
+										if (canonicalPath.isDirectory()) {
+												workingDir = canonicalPath.getCanonicalPath();
+												continue;
+										}
+										else {
+											System.out.println("Invalid directory " + tokens[1]);
+											continue;
+										}
+									}
 									// Directory changes containing one or more ../
-									else if ((Pattern.matches(".*(../)++.*", tokens[1])) || 
-												(tokens[1].equals(".."))) {
+									else if ((Pattern.matches(".*(../)++.*", tokens[1]))) {
 										if (tokens[1].equals("..")) {
 											// A workaround that changes the .. into its equivalent.
 											tokens[1] = "../";

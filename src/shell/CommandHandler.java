@@ -66,7 +66,7 @@ public class CommandHandler {
 				return;
 			}
 			else {
-				System.err.println(e.getMessage() + "\n");
+				System.err.println(e.getMessage());
 				return;
 			}
 		}
